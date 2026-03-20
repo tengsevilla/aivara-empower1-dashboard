@@ -60,6 +60,7 @@ export function SMSTable({
               <TableHead className="w-[120px]">Status</TableHead>
               <TableHead>Campaign</TableHead>
               <TableHead className="hidden md:table-cell">Lead Source</TableHead>
+              <TableHead className="hidden xl:table-cell">Executed At</TableHead>
               <TableHead className="text-right hidden sm:table-cell">Cost</TableHead>
               <TableHead className="text-right hidden lg:table-cell">Ingest Time</TableHead>
             </TableRow>
@@ -68,7 +69,7 @@ export function SMSTable({
             {records.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={5}
+                  colSpan={6}
                   className="text-center py-12 text-[var(--muted-foreground)]"
                 >
                   No records found
@@ -86,6 +87,19 @@ export function SMSTable({
                   <TableCell className="hidden md:table-cell">
                     <span className="text-[var(--muted-foreground)] text-sm truncate max-w-[200px] block">
                       {record.lead_source || "—"}
+                    </span>
+                  </TableCell>
+                  <TableCell className="hidden xl:table-cell">
+                    <span className="text-sm text-[var(--muted-foreground)] whitespace-nowrap">
+                      {record.createdAt
+                        ? new Date(record.createdAt).toLocaleString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
+                        : "—"}
                     </span>
                   </TableCell>
                   <TableCell className="text-right hidden sm:table-cell">
@@ -190,6 +204,7 @@ export function SMSTableSkeleton() {
               <TableHead>Status</TableHead>
               <TableHead>Campaign</TableHead>
               <TableHead className="hidden md:table-cell">Lead Source</TableHead>
+              <TableHead className="hidden xl:table-cell">Executed At</TableHead>
               <TableHead className="text-right hidden sm:table-cell">Cost</TableHead>
               <TableHead className="text-right hidden lg:table-cell">Ingest Time</TableHead>
             </TableRow>
@@ -200,6 +215,7 @@ export function SMSTableSkeleton() {
                 <TableCell><Skeleton className="h-5 w-20" /></TableCell>
                 <TableCell><Skeleton className="h-4 w-16" /></TableCell>
                 <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-40" /></TableCell>
+                <TableCell className="hidden xl:table-cell"><Skeleton className="h-4 w-32" /></TableCell>
                 <TableCell className="hidden sm:table-cell"><Skeleton className="h-4 w-16 ml-auto" /></TableCell>
                 <TableCell className="hidden lg:table-cell"><Skeleton className="h-4 w-16 ml-auto" /></TableCell>
               </TableRow>

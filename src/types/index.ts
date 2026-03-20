@@ -10,6 +10,8 @@ export interface RVMStats {
   failed: number;
   queued: number;
   total: number;
+  total_cost: number;
+  campaign_breakdown: Record<string, number>;
   failure_reasons: RVMFailureReasons;
 }
 
@@ -18,6 +20,10 @@ export interface SMSOutboundStats {
   total: number;
   delivered: number;
   carrier_rejected: number;
+  message_sent: number;
+  failed: number;
+  total_cost: number;
+  campaign_breakdown: Record<string, number>;
 }
 
 // SMS Inbound Types
@@ -34,11 +40,26 @@ export interface SMSInboundStats {
   sentiment: SMSSentiment;
 }
 
+// Queue Types
+export interface SMSQueueData {
+  total_queued: number;
+  campaign_breakdown: Record<string, number>;
+  carrier_breakdown: Record<string, number>;
+  action_breakdown: Record<string, number>;
+}
+
+export interface RVMQueueData {
+  total_queued: number;
+  campaign_breakdown: Record<string, number>;
+}
+
 // Aggregated Dashboard Response
 export interface DashboardData {
   rvm: RVMStats;
   sms_outbound: SMSOutboundStats;
   sms_inbound: SMSInboundStats;
+  sms_queue: SMSQueueData;
+  rvm_queue: RVMQueueData;
 }
 
 // SMS Detail Types
@@ -73,6 +94,7 @@ export interface SMSRecord {
   campaign_id: string;
   lead_cost: number;
   ingest_time: number;
+  createdAt?: string;
 }
 
 export interface SMSRawLogs {

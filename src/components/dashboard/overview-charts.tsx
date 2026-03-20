@@ -17,16 +17,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Skeleton } from "@/components/ui/skeleton";
 import type { DashboardData } from "@/types";
 
-// Color palette using CSS custom properties values
-const CHART_COLORS = [
-  "var(--chart-1)",
-  "var(--chart-2)",
-  "var(--chart-3)",
-  "var(--chart-4)",
-  "var(--chart-5)",
-];
-
-// Fallback hex colors for Recharts (which may not support CSS vars in some contexts)
 const COLORS = [
   "#64b5d0",
   "#4e8fa0",
@@ -41,43 +31,79 @@ interface OverviewChartsProps {
   data: DashboardData;
 }
 
+const tooltipStyle = {
+  backgroundColor: "var(--popover)",
+  borderColor: "var(--border)",
+  borderRadius: "0.5rem",
+  color: "var(--popover-foreground)",
+};
+
+const renderCustomLabel = ({
+  cx,
+  cy,
+  midAngle,
+  innerRadius,
+  outerRadius,
+  percent,
+}: {
+  cx: number;
+  cy: number;
+  midAngle: number;
+  innerRadius: number;
+  outerRadius: number;
+  percent: number;
+}) => {
+  if (percent < 0.05) return null;
+  const RADIAN = Math.PI / 180;
+  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+  return (
+    <text
+      x={x}
+      y={y}
+      fill="white"
+      textAnchor="middle"
+      dominantBaseline="central"
+      fontSize={12}
+      fontWeight="600"
+    >
+      {`${(percent * 100).toFixed(0)}%`}
+    </text>
+  );
+};
+
+function legendFormatter(value: string) {
+  return <span style={{ color: "var(--foreground)", fontSize: "12px" }}>{value}</span>;
+}
+
 export function OverviewCharts({ data }: OverviewChartsProps) {
   // SMS Delivery Pie
   const smsDeliveryData = [
-    { name: "Delivered", value: data.sms_outbound.delivered },
-    { name: "Carrier Rejected", value: data.sms_outbound.carrier_rejected },
-    {
-      name: "Other",
-      value: Math.max(
-        0,
-        data.sms_outbound.total -
-          data.sms_outbound.delivered -
-          data.sms_outbound.carrier_rejected
-      ),
-    },
+    { name: "Delivered",       value: data.sms_outbound.delivered },
+    { name: "Carrier Rejected",value: data.sms_outbound.carrier_rejected },
+    { name: "Message Sent",    value: data.sms_outbound.message_sent },
+    { name: "Failed",          value: data.sms_outbound.failed },
   ].filter((d) => d.value > 0);
 
   // RVM Status Pie
   const rvmStatusData = [
     { name: "Completed", value: data.rvm.completed },
-    { name: "Failed", value: data.rvm.failed },
-    { name: "Queued", value: data.rvm.queued },
+    { name: "Failed",    value: data.rvm.failed },
+    { name: "Queued",    value: data.rvm.queued },
     {
       name: "Other",
-      value: Math.max(
-        0,
-        data.rvm.total - data.rvm.completed - data.rvm.failed - data.rvm.queued
-      ),
+      value: Math.max(0, data.rvm.total - data.rvm.completed - data.rvm.failed - data.rvm.queued),
     },
   ].filter((d) => d.value > 0);
 
   // Inbound Sentiment Bar
   const sentimentData = [
-    { name: "DNC", value: data.sms_inbound.sentiment.dnc },
+    { name: "DNC",      value: data.sms_inbound.sentiment.dnc },
     { name: "Positive", value: data.sms_inbound.sentiment.positive },
-    { name: "Neutral", value: data.sms_inbound.sentiment.neutral },
+    { name: "Neutral",  value: data.sms_inbound.sentiment.neutral },
     { name: "Negative", value: data.sms_inbound.sentiment.negative },
-    { name: "Invalid", value: data.sms_inbound.sentiment.invalid },
+    { name: "Invalid",  value: data.sms_inbound.sentiment.invalid },
   ];
 
   // RVM Failure Reasons
@@ -89,40 +115,15 @@ export function OverviewCharts({ data }: OverviewChartsProps) {
     .sort((a, b) => b.value - a.value)
     .slice(0, 6);
 
-  const renderCustomLabel = ({
-    cx,
-    cy,
-    midAngle,
-    innerRadius,
-    outerRadius,
-    percent,
-  }: {
-    cx: number;
-    cy: number;
-    midAngle: number;
-    innerRadius: number;
-    outerRadius: number;
-    percent: number;
-  }) => {
-    if (percent < 0.05) return null;
-    const RADIAN = Math.PI / 180;
-    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-    const x = cx + radius * Math.cos(-midAngle * RADIAN);
-    const y = cy + radius * Math.sin(-midAngle * RADIAN);
-    return (
-      <text
-        x={x}
-        y={y}
-        fill="white"
-        textAnchor="middle"
-        dominantBaseline="central"
-        fontSize={12}
-        fontWeight="600"
-      >
-        {`${(percent * 100).toFixed(0)}%`}
-      </text>
-    );
-  };
+  // SMS Campaign Breakdown
+  const smsCampaignData = Object.entries(data.sms_outbound.campaign_breakdown)
+    .map(([key, val]) => ({ name: key, value: val }))
+    .sort((a, b) => b.value - a.value);
+
+  // RVM Campaign Breakdown
+  const rvmCampaignData = Object.entries(data.rvm.campaign_breakdown)
+    .map(([key, val]) => ({ name: key, value: val }))
+    .sort((a, b) => b.value - a.value);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -145,28 +146,11 @@ export function OverviewCharts({ data }: OverviewChartsProps) {
                 dataKey="value"
               >
                 {smsDeliveryData.map((entry, index) => (
-                  <Cell
-                    key={`sms-${entry.name}`}
-                    fill={COLORS[index % COLORS.length]}
-                  />
+                  <Cell key={`sms-${entry.name}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip
-                formatter={(value: number) => [value.toLocaleString(), ""]}
-                contentStyle={{
-                  backgroundColor: "var(--popover)",
-                  borderColor: "var(--border)",
-                  borderRadius: "0.5rem",
-                  color: "var(--popover-foreground)",
-                }}
-              />
-              <Legend
-                formatter={(value) => (
-                  <span style={{ color: "var(--foreground)", fontSize: "12px" }}>
-                    {value}
-                  </span>
-                )}
-              />
+              <Tooltip formatter={(value: number) => [value.toLocaleString(), ""]} contentStyle={tooltipStyle} />
+              <Legend formatter={legendFormatter} />
             </PieChart>
           </ResponsiveContainer>
         </CardContent>
@@ -191,28 +175,11 @@ export function OverviewCharts({ data }: OverviewChartsProps) {
                 dataKey="value"
               >
                 {rvmStatusData.map((entry, index) => (
-                  <Cell
-                    key={`rvm-${entry.name}`}
-                    fill={COLORS[index % COLORS.length]}
-                  />
+                  <Cell key={`rvm-${entry.name}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip
-                formatter={(value: number) => [value.toLocaleString(), ""]}
-                contentStyle={{
-                  backgroundColor: "var(--popover)",
-                  borderColor: "var(--border)",
-                  borderRadius: "0.5rem",
-                  color: "var(--popover-foreground)",
-                }}
-              />
-              <Legend
-                formatter={(value) => (
-                  <span style={{ color: "var(--foreground)", fontSize: "12px" }}>
-                    {value}
-                  </span>
-                )}
-              />
+              <Tooltip formatter={(value: number) => [value.toLocaleString(), ""]} contentStyle={tooltipStyle} />
+              <Legend formatter={legendFormatter} />
             </PieChart>
           </ResponsiveContainer>
         </CardContent>
@@ -228,32 +195,12 @@ export function OverviewCharts({ data }: OverviewChartsProps) {
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={sentimentData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-              <XAxis
-                dataKey="name"
-                tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
-                axisLine={{ stroke: "var(--border)" }}
-                tickLine={false}
-              />
-              <YAxis
-                tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <Tooltip
-                formatter={(value: number) => [value.toLocaleString(), "Count"]}
-                contentStyle={{
-                  backgroundColor: "var(--popover)",
-                  borderColor: "var(--border)",
-                  borderRadius: "0.5rem",
-                  color: "var(--popover-foreground)",
-                }}
-              />
+              <XAxis dataKey="name" tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} axisLine={{ stroke: "var(--border)" }} tickLine={false} />
+              <YAxis tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} axisLine={false} tickLine={false} />
+              <Tooltip formatter={(value: number) => [value.toLocaleString(), "Count"]} contentStyle={tooltipStyle} />
               <Bar dataKey="value" radius={[4, 4, 0, 0]}>
                 {sentimentData.map((entry, index) => (
-                  <Cell
-                    key={`sentiment-${entry.name}`}
-                    fill={COLORS[index % COLORS.length]}
-                  />
+                  <Cell key={`sentiment-${entry.name}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Bar>
             </BarChart>
@@ -261,44 +208,63 @@ export function OverviewCharts({ data }: OverviewChartsProps) {
         </CardContent>
       </Card>
 
+      {/* SMS Campaign Breakdown */}
+      {smsCampaignData.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">SMS Campaign Breakdown</CardTitle>
+            <CardDescription>Messages sent per campaign</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={240}>
+              <BarChart data={smsCampaignData} margin={{ top: 0, right: 0, left: -20, bottom: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                <XAxis dataKey="name" tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} axisLine={{ stroke: "var(--border)" }} tickLine={false} angle={-20} textAnchor="end" height={50} />
+                <YAxis tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                <Tooltip formatter={(value: number) => [value.toLocaleString(), "Messages"]} contentStyle={tooltipStyle} />
+                <Bar dataKey="value" fill={COLORS[0]} radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* RVM Campaign Breakdown */}
+      {rvmCampaignData.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">RVM Campaign Breakdown</CardTitle>
+            <CardDescription>Voicemails sent per campaign</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={240}>
+              <BarChart data={rvmCampaignData} margin={{ top: 0, right: 0, left: -20, bottom: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                <XAxis dataKey="name" tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} axisLine={{ stroke: "var(--border)" }} tickLine={false} angle={-20} textAnchor="end" height={50} />
+                <YAxis tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                <Tooltip formatter={(value: number) => [value.toLocaleString(), "Voicemails"]} contentStyle={tooltipStyle} />
+                <Bar dataKey="value" fill={COLORS[1]} radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
+
       {/* RVM Failure Reasons */}
       {failureReasons.length > 0 && (
-        <Card className="lg:col-span-3">
+        <Card className={smsCampaignData.length > 0 || rvmCampaignData.length > 0 ? "" : "lg:col-span-3"}>
           <CardHeader>
             <CardTitle className="text-base">RVM Failure Reasons</CardTitle>
             <CardDescription>Breakdown of failed voicemail deliveries</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart
-                data={failureReasons}
-                margin={{ top: 0, right: 20, left: -10, bottom: 20 }}
-              >
+            <ResponsiveContainer width="100%" height={240}>
+              <BarChart data={failureReasons} margin={{ top: 0, right: 20, left: -10, bottom: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                <XAxis
-                  dataKey="name"
-                  tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
-                  axisLine={{ stroke: "var(--border)" }}
-                  tickLine={false}
-                  angle={-20}
-                  textAnchor="end"
-                  height={50}
-                />
-                <YAxis
-                  tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <Tooltip
-                  formatter={(value: number) => [value.toLocaleString(), "Count"]}
-                  contentStyle={{
-                    backgroundColor: "var(--popover)",
-                    borderColor: "var(--border)",
-                    borderRadius: "0.5rem",
-                    color: "var(--popover-foreground)",
-                  }}
-                />
-                <Bar dataKey="value" fill={COLORS[1]} radius={[4, 4, 0, 0]} />
+                <XAxis dataKey="name" tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} axisLine={{ stroke: "var(--border)" }} tickLine={false} angle={-20} textAnchor="end" height={50} />
+                <YAxis tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                <Tooltip formatter={(value: number) => [value.toLocaleString(), "Count"]} contentStyle={tooltipStyle} />
+                <Bar dataKey="value" fill={COLORS[2]} radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
