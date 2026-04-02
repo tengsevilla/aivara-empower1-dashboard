@@ -219,7 +219,7 @@ export function OverviewSection({ data, isLoading }: Props) {
           title="Forth Deals — Monthly"
           description="Deals and revenue per month"
           columns={["Deals", "Revenue"]}
-          rows={dealsMonths.map((e) => [e.period, String(e.total_deals), fmtCurrency(e.total_revenue)])}
+          rows={dealsMonths.map((e) => [e.period, String(e.total_deals), fmtCurrency(e.total_revenue ?? 0)])}
         />
       </div>
     </section>

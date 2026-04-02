@@ -219,13 +219,13 @@ export function ForthDealsSection({ data, isLoading }: Props) {
                   </div>
                   <div>
                     <p className="text-[10px] text-[var(--muted-foreground)]">Total Revenue</p>
-                    <p className="text-base font-bold text-[var(--foreground)]">{fmtCurrency(d.total_revenue)}</p>
+                    <p className="text-base font-bold text-[var(--foreground)]">{fmtCurrency(d.total_revenue ?? 0)}</p>
                   </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4 text-xs pt-0">
                 {/* By deal type */}
-                {d.by_deal_type.filter((t) => t.total_deals > 0).length > 0 && (
+                {(d.by_deal_type ?? []).filter((t) => t.total_deals > 0).length > 0 && (
                   <div>
                     <p className="text-[10px] uppercase tracking-wider font-semibold text-[var(--muted-foreground)] mb-2">By Deal Type</p>
                     {/* Column headers */}
@@ -235,22 +235,22 @@ export function ForthDealsSection({ data, isLoading }: Props) {
                       <span className="text-right">Revenue</span>
                     </div>
                     <div className="space-y-1.5">
-                      {d.by_deal_type.filter((t) => t.total_deals > 0).map((t) => (
+                      {(d.by_deal_type ?? []).filter((t) => t.total_deals > 0).map((t) => (
                         <div key={t.deal_type} className="grid grid-cols-3 items-center gap-1">
                           <span className="text-[var(--foreground)] truncate col-span-1">{t.deal_type}</span>
                           <span className="text-center font-medium tabular-nums text-[var(--muted-foreground)]">{t.total_deals}</span>
-                          <span className="text-right font-semibold tabular-nums">{fmtCurrencyShort(t.total_revenue)}</span>
+                          <span className="text-right font-semibold tabular-nums">{fmtCurrencyShort(t.total_revenue ?? 0)}</span>
                         </div>
                       ))}
                     </div>
                   </div>
                 )}
                 {/* Divider */}
-                {d.by_source_lead.length > 0 && d.by_deal_type.filter((t) => t.total_deals > 0).length > 0 && (
+                {(d.by_source_lead ?? []).length > 0 && (d.by_deal_type ?? []).filter((t) => t.total_deals > 0).length > 0 && (
                   <hr style={{ borderColor: "var(--border)" }} />
                 )}
                 {/* By lead source */}
-                {d.by_source_lead.length > 0 && (
+                {(d.by_source_lead ?? []).length > 0 && (
                   <div>
                     <p className="text-[10px] uppercase tracking-wider font-semibold text-[var(--muted-foreground)] mb-2">By Lead Source</p>
                     {/* Column headers */}
@@ -260,11 +260,11 @@ export function ForthDealsSection({ data, isLoading }: Props) {
                       <span className="text-right">Revenue</span>
                     </div>
                     <div className="space-y-1.5">
-                      {d.by_source_lead.map((s) => (
+                      {(d.by_source_lead ?? []).map((s) => (
                         <div key={s.source_lead} className="grid grid-cols-3 items-center gap-1">
                           <span className="text-[var(--foreground)] truncate col-span-1">{s.source_lead}</span>
                           <span className="text-center font-medium tabular-nums text-[var(--muted-foreground)]">{s.total_deals}</span>
-                          <span className="text-right font-semibold tabular-nums">{fmtCurrencyShort(s.total_revenue)}</span>
+                          <span className="text-right font-semibold tabular-nums">{fmtCurrencyShort(s.total_revenue ?? 0)}</span>
                         </div>
                       ))}
                     </div>
