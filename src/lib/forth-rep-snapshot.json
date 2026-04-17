@@ -1,0 +1,21 @@
+{
+  "scrapedAt": "2026-04-17T18:23:33.124Z",
+  "source": "Forth CRM — Reso Deal Closed saved list (list_id 618784)",
+  "totalDeals": 264,
+  "assignedDeals": 130,
+  "unassignedDeals": 134,
+  "note": "Unassigned deals are pre-tracking records where reps weren't dispositioning; they cannot be retroactively attributed. 'Total Payments Cleared' column was 0 for all rows in this snapshot (Forth data display issue).",
+  "reps": [
+    { "rep_name": "Matt Packard",      "total_deals": 26,  "total_debt": 2522136.00, "total_current_payments": 37508.00, "total_payments_cleared": 0 },
+    { "rep_name": "Jenn Cutler",       "total_deals": 14,  "total_debt": 1841064.00, "total_current_payments": 10112.17, "total_payments_cleared": 0 },
+    { "rep_name": "Austin Loyd",       "total_deals": 27,  "total_debt": 2509019.00, "total_current_payments":  8702.71, "total_payments_cleared": 0 },
+    { "rep_name": "Troy Tillery",      "total_deals": 10,  "total_debt": 2254963.41, "total_current_payments":  7244.00, "total_payments_cleared": 0 },
+    { "rep_name": "Austin Owens",      "total_deals": 25,  "total_debt": 1722806.00, "total_current_payments":  5439.13, "total_payments_cleared": 0 },
+    { "rep_name": "Casey Busenbark",   "total_deals":  6,  "total_debt":  773363.00, "total_current_payments":  3482.00, "total_payments_cleared": 0 },
+    { "rep_name": "Melissa Monacelli", "total_deals":  5,  "total_debt":  276995.00, "total_current_payments":  1661.61, "total_payments_cleared": 0 },
+    { "rep_name": "Evan Nenni",        "total_deals": 12,  "total_debt": 1566707.00, "total_current_payments":  1249.00, "total_payments_cleared": 0 },
+    { "rep_name": "Zach Muradian",     "total_deals":  1,  "total_debt":   27989.00, "total_current_payments":   412.00, "total_payments_cleared": 0 },
+    { "rep_name": "Jonathan Ramlow",   "total_deals":  4,  "total_debt":  440738.00, "total_current_payments":     0.00, "total_payments_cleared": 0 },
+    { "rep_name": "Unassigned",        "total_deals": 134, "total_debt":       0.00, "total_current_payments":     0.00, "total_payments_cleared": 0 }
+  ]
+}
