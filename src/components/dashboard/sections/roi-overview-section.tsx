@@ -297,11 +297,25 @@ function ChannelSpendSection({
         {/* Vendor-level detail */}
         <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
           {CHANNEL_SPEND.map((c) => {
-            const adjusted = c.dailySpend * multiplier;
+            // In live mode, map each vendor to its live-calculated spend.
+            // In sample/monthly modes, use dailySpend × multiplier.
+            let adjusted: number;
+            if (period === "live") {
+              if (c.name === "Commio Outbound Calls") adjusted = liveCallSpend;
+              else if (c.name === "Commio Messaging (SMS)") adjusted = liveSmsSpend;
+              else if (c.name === "Drop Cowboy RVM") adjusted = liveRvmSpend;
+              else adjusted = c.dailySpend; // inbound — fall back to sample until we have live volume
+            } else {
+              adjusted = c.dailySpend * multiplier;
+            }
+            const isEstimated = period === "live" && (c.name === "Drop Cowboy RVM" || c.name === "Commio Inbound Calls");
             return (
               <div key={c.name} className="rounded-md border border-[var(--border)] bg-[var(--card)] px-3 py-2.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-[var(--foreground)]">{c.name}</span>
+                  <span className="text-xs font-semibold text-[var(--foreground)]">
+                    {c.name}
+                    {isEstimated && <span className="ml-1.5 text-[9px] font-medium text-amber-600 uppercase">est.</span>}
+                  </span>
                   <span className="text-sm font-bold tabular-nums text-[var(--foreground)]">{fmtCurrencyFull(adjusted)}</span>
                 </div>
                 <p className="text-[10px] text-[var(--muted-foreground)] mt-0.5">{c.description}</p>
@@ -394,9 +408,10 @@ function LeadSourceRoiSection({ data }: { data: DashboardData }) {
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <CardTitle className="text-sm font-semibold">Revenue by Lead Source</CardTitle>
+            <CardTitle className="text-sm font-semibold">Revenue by Lead Source / Phone Pool</CardTitle>
             <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">
-              Empower1 revenue, deals, and call performance per lead source
+              Each Ring Central phone number belongs to a lead source and round-robins to available reps.
+              This view shows channel performance — rep-level breakdown requires extension data.
             </p>
           </div>
           <div className="flex gap-1 shrink-0">
