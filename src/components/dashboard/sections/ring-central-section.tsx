@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { StatsCard } from "@/components/dashboard/stats-card";
 import type { DashboardData, RingCentralLeadSource } from "@/types";
 import { CHART_COLORS } from "@/lib/chart-colors";
+import { backfillPeriods } from "@/lib/period-backfill";
 
 interface Props { data: DashboardData; isLoading: boolean; }
 
@@ -38,8 +39,33 @@ export function RingCentralSection({ data, isLoading }: Props) {
   const { ringCentral } = data;
   const { leadsource_breakdown, month_breakdown, week_breakdown, summary } = ringCentral;
 
-  const sortedMonths = [...(month_breakdown ?? [])].sort((a, b) => b.period.localeCompare(a.period));
-  const sortedWeeks = [...(week_breakdown ?? [])].sort((a, b) => b.period.localeCompare(a.period));
+  // Backfill missing periods with zero entries so trends are honest
+  const filledMonths = backfillPeriods(month_breakdown ?? [], (period) => ({
+    period,
+    total_calls: 0,
+    answered_calls: 0,
+    missed_calls: 0,
+    total_duration: 0,
+    total_duration_mins: 0,
+    answer_rate: 0,
+    avg_duration: 0,
+    by_leadsource: [],
+  }));
+  const filledWeeks = backfillPeriods(week_breakdown ?? [], (period) => ({
+    period,
+    date_range: "",
+    total_calls: 0,
+    answered_calls: 0,
+    missed_calls: 0,
+    total_duration: 0,
+    total_duration_mins: 0,
+    answer_rate: 0,
+    avg_duration: 0,
+    by_leadsource: [],
+  }));
+  // Reverse-sort for descending display (most recent first)
+  const sortedMonths = [...filledMonths].sort((a, b) => b.period.localeCompare(a.period));
+  const sortedWeeks = [...filledWeeks].sort((a, b) => b.period.localeCompare(a.period));
 
   return (
     <section id="ring-central" className="space-y-6">

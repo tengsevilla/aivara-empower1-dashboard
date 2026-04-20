@@ -7,6 +7,7 @@ import {
 import { CHART_COLORS } from "@/lib/chart-colors";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { backfillPeriods } from "@/lib/period-backfill";
 import type { DashboardData, ForthMonthEntry, ForthWeekEntry } from "@/types";
 
 const TOOLTIP_STYLE = {
@@ -45,8 +46,23 @@ export function ForthDealsSection({ data, isLoading }: Props) {
   const { forthDeals } = data;
   const { source_lead_breakdown, deal_type_breakdown, month_breakdown, week_breakdown } = forthDeals;
 
-  const sortedMonths = [...month_breakdown].sort((a, b) => a.period.localeCompare(b.period));
-  const sortedWeeks  = [...week_breakdown].sort((a, b) => a.period.localeCompare(b.period));
+  // Backfill missing periods with zero entries so trends are continuous
+  // (n8n's aggregation drops empty periods by default, which left gaps).
+  const sortedMonths = backfillPeriods(month_breakdown, (period) => ({
+    period,
+    total_deals: 0,
+    total_revenue: 0,
+    by_deal_type: [],
+    by_source_lead: [],
+  }));
+  const sortedWeeks = backfillPeriods(week_breakdown, (period) => ({
+    period,
+    date_range: "",
+    total_deals: 0,
+    total_revenue: 0,
+    by_deal_type: [],
+    by_source_lead: [],
+  }));
 
   return (
     <section id="forth-deals" className="space-y-10">
