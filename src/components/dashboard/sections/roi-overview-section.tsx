@@ -61,9 +61,13 @@ export function RoiOverviewSection({ data, isLoading }: Props) {
   const { forthDeals, smsRawlogs, ringCentral } = data;
   const { summary } = forthDeals;
 
-  const totalRevenue = summary.total_revenue; // Empower1 revenue from closed deals
-  const totalDeals = summary.total_deals;
-  const avgDealSize = totalDeals > 0 ? totalRevenue / totalDeals : 0;
+  const submissionValue = summary.total_revenue; // Face value of all closed deals (INCLUDES NSF/cancelled)
+  const activeMonthlyRevenue = summary.total_current_payments; // Actual recurring money from clients still paying
+  const totalDeals = summary.total_deals; // Submissions count
+  const avgSubmissionValue = totalDeals > 0 ? submissionValue / totalDeals : 0;
+  // Keep legacy names for other functions that reference them below
+  const totalRevenue = submissionValue;
+  const avgDealSize = avgSubmissionValue;
 
   // Live-calculated spend using webhook volume × vendor rates.
   // SMS: total messages sent × $0.003/msg
@@ -121,26 +125,23 @@ export function RoiOverviewSection({ data, isLoading }: Props) {
       {/* ── Row 1: Top-level KPIs ── */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
         <KpiCard
-          label="Empower1 Revenue"
-          value={fmtCurrency(totalRevenue)}
-          subtitle="All closed deals (lifetime)"
-          color="green"
-          icon={<DollarSign className="h-4 w-4" />}
-        />
-        <KpiCard
-          label="Deals Closed"
+          label="Submissions"
           value={totalDeals.toLocaleString()}
-          subtitle="Across all sources"
+          subtitle={`${fmtCurrency(avgSubmissionValue)} avg submission value`}
           color="violet"
           icon={<TrendingUp className="h-4 w-4" />}
         />
         <KpiCard
-          label="Avg Deal Revenue"
-          value={fmtCurrency(avgDealSize)}
-          subtitle={(() => {
-            const tier = estimateDominantTier(totalRevenue, totalDeals);
-            return tier ? `~$${tier.payment}/mo tier dominant` : "Revenue per deal";
-          })()}
+          label="Active Monthly Revenue"
+          value={fmtCurrency(activeMonthlyRevenue)}
+          subtitle="Clients currently paying (excludes NSF/cancelled)"
+          color="green"
+          icon={<DollarSign className="h-4 w-4" />}
+        />
+        <KpiCard
+          label="Submission Value"
+          value={fmtCurrency(submissionValue)}
+          subtitle="Face value of all closed deals (includes NSF)"
           color="sky"
           icon={<Target className="h-4 w-4" />}
         />
@@ -149,7 +150,7 @@ export function RoiOverviewSection({ data, isLoading }: Props) {
           value={fmtCurrency(spendForPeriod)}
           subtitle={
             cacForPeriod != null
-              ? `${fmtCurrency(cacForPeriod)}/deal CAC · ${revenueToSpendRatio?.toFixed(1)}:1 revenue`
+              ? `${fmtCurrency(cacForPeriod)}/submission · ${revenueToSpendRatio?.toFixed(1)}:1 face value`
               : "Commio + Drop Cowboy combined"
           }
           color="amber"
@@ -170,10 +171,10 @@ export function RoiOverviewSection({ data, isLoading }: Props) {
           </span>
         ) : (
           <span>
-            <span className="font-semibold text-[var(--foreground)]">Revenue</span> is lifetime from Forth.{" "}
-            <span className="font-semibold text-[var(--foreground)]">Spend</span> is extrapolated from a 2026-04-16 sample day
-            (Commio $1,331 + Drop Cowboy $281). Switch to <span className="font-semibold text-[var(--foreground)]">Live</span> for
-            webhook-based calculation.
+            <span className="font-semibold text-[var(--foreground)]">Submissions</span> count every closed Reso deal (agent gets credit).{" "}
+            <span className="font-semibold text-[var(--foreground)]">Active Monthly Revenue</span> only counts clients currently paying, so NSF/cancelled deals don&apos;t inflate it.{" "}
+            <span className="font-semibold text-[var(--foreground)]">Submission Value</span> is the lifetime face value of all closed deals and still includes NSF/cancelled until the n8n query filters by payment-cleared status.{" "}
+            <span className="font-semibold text-[var(--foreground)]">Spend</span> is from a 2026-04-16 sample day (Commio $1,331 + Drop Cowboy $281). Switch to <span className="font-semibold text-[var(--foreground)]">Live</span> for webhook-based calculation.
           </span>
         )}
       </div>
@@ -198,7 +199,7 @@ export function RoiOverviewSection({ data, isLoading }: Props) {
       {/* ── Row 5: Secondary metrics ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <MiniStat label="Client Debt Under Mgmt" value={fmtCurrency(summary.total_debt)} />
-        <MiniStat label="Current Client Payments" value={fmtCurrency(summary.total_current_payments)} />
+        <MiniStat label="Avg Submission Value" value={fmtCurrency(avgSubmissionValue)} />
         <MiniStat label="SMS Sent (from webhook)" value={data.smsRawlogs.total_sent.toLocaleString()} />
         <MiniStat label="SMS Delivery Rate" value={`${data.smsRawlogs.overall_delivery_rate.toFixed(1)}%`} />
       </div>

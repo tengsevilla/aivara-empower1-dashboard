@@ -78,7 +78,7 @@ export function RepPerformanceSection({ data, isLoading }: Props) {
       <div className="border-b border-[var(--border)] pb-4">
         <h2 className="text-xl font-bold text-[var(--foreground)]">Rep Performance</h2>
         <p className="text-sm text-[var(--muted-foreground)] mt-0.5">
-          Closed Reso deals attributed to each sales rep
+          Submissions = every closed Reso deal (agent credit). Active Monthly Revenue = clients currently paying (excludes NSF/cancelled).
           {!hasWebhookReps && (
             <>
               {" "}&middot;{" "}
@@ -102,7 +102,7 @@ export function RepPerformanceSection({ data, isLoading }: Props) {
                 <p className="text-xs font-medium text-amber-600 uppercase tracking-wider">Top Performer</p>
                 <p className="text-lg font-bold text-[var(--foreground)]">{topRep.rep_name}</p>
                 <p className="text-sm text-[var(--muted-foreground)]">
-                  {topRep.total_deals} deals &middot; {fmtCurrencyFull(topRep.total_current_payments)} current payments
+                  {topRep.total_deals} submissions &middot; {fmtCurrencyFull(topRep.total_current_payments)} active monthly revenue
                   {topRep.total_debt > 0 && (
                     <> &middot; {fmtCurrency(topRep.total_debt)} debt under mgmt</>
                   )}
@@ -128,10 +128,10 @@ export function RepPerformanceSection({ data, isLoading }: Props) {
                 <tr className="border-b border-[var(--border)] bg-[var(--muted)]">
                   <th className="text-left px-3 py-2.5 font-medium text-[var(--muted-foreground)]">#</th>
                   <th className="text-left px-3 py-2.5 font-medium text-[var(--muted-foreground)]">Rep</th>
-                  <th className="text-right px-3 py-2.5 font-medium text-[var(--muted-foreground)]">Deals</th>
-                  <th className="text-right px-3 py-2.5 font-medium text-[var(--muted-foreground)]">Current Payments</th>
+                  <th className="text-right px-3 py-2.5 font-medium text-[var(--muted-foreground)]">Submissions</th>
+                  <th className="text-right px-3 py-2.5 font-medium text-[var(--muted-foreground)]">Active Monthly Revenue</th>
                   <th className="text-right px-3 py-2.5 font-medium text-[var(--muted-foreground)]">Debt Under Mgmt</th>
-                  <th className="text-right px-3 py-2.5 font-medium text-[var(--muted-foreground)]">Avg Deal</th>
+                  <th className="text-right px-3 py-2.5 font-medium text-[var(--muted-foreground)]">Avg Per Submission</th>
                 </tr>
               </thead>
               <tbody>
